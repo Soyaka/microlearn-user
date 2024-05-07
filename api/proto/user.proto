@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+option go_package = "github.com/Soyaka/user/api/proto";
+import "google/annotations.proto";
+
+message User {
+    string id = 1 [json_name = "id"];
+    string name = 2 [json_name = "name"];
+    string email = 3 [json_name = "email"];
+    string password = 4 [json_name = "password"];
+}
+
+message LoginRequest {
+    string email = 1 [json_name = "email"];
+    string password = 2 [json_name = "password"];
+}
+
+message RegisterRequest {
+    string name = 1 [json_name = "name"];
+    string email = 2 [json_name = "email"];
+    string password = 3 [json_name = "password"];
+}
+
+message UpdateUserRequest {
+    string name = 1 [json_name = "name"];
+    string email = 2 [json_name = "email"];
+    string password = 3 [json_name = "password"];
+}
+
+message Token {
+    string token = 1 [json_name = "token"];
+}
+
+message OK {
+    bool ok = 1 [json_name = "ok"];
+}
+
+message ID {
+    string id = 1 [json_name = "id"];
+}
+
+service UserService {
+    rpc LoginUser(LoginRequest) returns (Token) {
+        option (google.api.http) = {
+            post: "/user/login"
+            body: "*"
+        };
+    }
+
+    rpc RegisterUser(RegisterRequest) returns (OK) {
+        option (google.api.http) = {
+            post: "/user/register"
+            body: "*"
+        };
+    }
+
+    rpc UpdateUser(UpdateUserRequest) returns (OK) {
+        option (google.api.http) = {
+            put: "/user/update"
+            body: "*"
+        };
+    }
+
+    rpc GetUser(ID) returns (User) {
+        option (google.api.http) = {
+            get: "/user/get"
+        };
+    }
+
+    rpc DeleteUser(ID) returns (OK) {
+        option (google.api.http) = {
+            delete: "/user/delete"
+        };
+    }
+
+    rpc VerifyToken(Token) returns (OK) {
+        option (google.api.http) = {
+            get: "/user/verify"
+        };
+    }
+
+    rpc Logout(Token) returns (OK) {
+        option (google.api.http) = {
+            post: "/user/logout"
+        };
+    }
+
+    rpc RefreshToken(Token) returns (Token) {
+        option (google.api.http) = {
+            post: "/user/refresh"
+        };
+    };
+}
