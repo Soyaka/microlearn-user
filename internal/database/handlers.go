@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	proto "user/api/proto/gen"
+	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
 	"gorm.io/gorm"
 )
 

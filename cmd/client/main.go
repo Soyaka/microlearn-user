@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	proto "user/api/proto/gen"
+	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
 	"google.golang.org/grpc"
 )
 

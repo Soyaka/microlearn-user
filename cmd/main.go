@@ -5,8 +5,8 @@ import (
 	"net"
 	"os"
 
-	proto "user/api/proto/gen"
-	"user/internal/handlers"
+	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
+	"github.com/Soyaka/microlearn-user/internal/handlers"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
