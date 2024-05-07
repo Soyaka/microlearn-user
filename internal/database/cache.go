@@ -17,7 +17,7 @@ type RedisClient struct {
 }
 
 func NewCache() *RedisClient {
-	add := os.Getenv("localhost:6379")
+	add := os.Getenv("localhost:6375")
 	Password := os.Getenv("REDIS_PASSWORD")
 	client := redis.NewClient(&redis.Options{
 		Addr:     add,

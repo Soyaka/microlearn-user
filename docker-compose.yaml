@@ -1,27 +1,41 @@
-version: '3.8'
+# docker-compose.yml
+version: '3'
 
 services:
   redis:
-    image: redis:latest
+    container_name: my-redis
+    image: redis:alpine
     restart: always
     ports:
-      - "6379:6379"
-    environment:
-      - REDIS_PASSWORD=${REDIS_ROOT_PASSWORD}
-      - REDIS_PORT=6376
-      - REDIS_DATABASES=16
+      - "6375:6375"
     volumes:
-      - redis_volume:/data/redis
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    depends_on:
+      - postgres
+    networks:
+      - my-network
 
   postgres:
-    image: postgres:latest
+    container_name: my-postgres
+    image: postgres:13
     restart: always
+    environment:
+      POSTGRES_USER: gorm
+      POSTGRES_PASSWORD: gorm
+      POSTGRES_DB: gorm
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    command: postgres -c log_destination=stderr
+    networks:
+      - my-network
 
 volumes:
-  redis_volume:
+  redis-data:
+  postgres-data:
+
+networks:
+  my-network:
+    driver: bridge
