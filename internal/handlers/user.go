@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	proto "main/api/proto/gen"
-	"main/internal/database"
-	"main/internal/utils"
+	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
+	"github.com/Soyaka/microlearn-user/internal/database"
+	"github.com/Soyaka/microlearn-user/internal/utils"
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 	"gorm.io/gorm"

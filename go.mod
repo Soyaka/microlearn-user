@@ -1,4 +1,4 @@
-module main
+module github.com/Soyaka/microlearn-user
 
 go 1.22.0
 
