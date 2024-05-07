@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
+	proto "main/api/proto/gen"
 	"github.com/go-redis/redis"
 )
 

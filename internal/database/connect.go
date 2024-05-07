@@ -6,7 +6,7 @@ import (
 
 	//proto "github.com/Soyaka/user/api/proto/gen"kan
 
-	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
+	proto "main/api/proto/gen"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
