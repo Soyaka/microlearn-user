@@ -5,6 +5,7 @@ import (
 	"time"
 
 	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
+	"github.com/fatih/color"
 	"gorm.io/gorm"
 )
 
@@ -15,6 +16,7 @@ func (s *Service) AddUserToDb(ctx context.Context, req *proto.User) (*proto.OK, 
 	if res.Error != nil {
 		return &proto.OK{Ok: false}, res.Error
 	}
+	color.Blue("user added")
 	return &proto.OK{Ok: true}, nil
 }
 

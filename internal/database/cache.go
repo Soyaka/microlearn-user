@@ -3,7 +3,6 @@ package database
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
@@ -17,12 +16,10 @@ type RedisClient struct {
 }
 
 func NewCache() *RedisClient {
-	add := os.Getenv("localhost:6375")
-	Password := os.Getenv("REDIS_PASSWORD")
 	client := redis.NewClient(&redis.Options{
-		Addr:     add,
-		Password: Password,
-		DB:       0,
+		Addr: "localhost:6379",
+		Password: "",
+		DB:   0,
 	})
 	pong, err := client.Ping().Result()
 	if err != nil {
