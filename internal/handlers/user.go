@@ -9,6 +9,7 @@ import (
 	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
 	"github.com/Soyaka/microlearn-user/internal/database"
 	"github.com/Soyaka/microlearn-user/internal/utils"
+	"github.com/fatih/color"
 	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -74,17 +75,17 @@ func (U *UmplimentUserMethods) LoginUser(ctx context.Context, req *proto.LoginRe
 	var user *proto.User
 
 	user, err := U.Cache.GetUserFromCache(req.Email)
-
+	color.Red(user.Email)
 	if err != nil && err != redis.Nil || user == nil {
 		fmt.Print("cache error")
 		user, err = U.Db.GetUserFromDb(ctx, req.Email)
 		if err != nil {
 			return &proto.Token{}, err
 		}
-		_ = U.Cache.AddUserToCache(user, 5*time.Minute)
+		U.Cache.AddUserToCache(user, 5*time.Minute)
 	}
 
-	if !utils.VerifyPassword(user.Password, req.Password) {
+	if err := utils.VerifyPassword(user.Password, req.Password); err != nil {
 		return &proto.Token{}, err
 	}
 	token, err := utils.GenerateToken(user.Email, user.Name, user.Id)
