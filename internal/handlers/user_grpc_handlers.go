@@ -3,14 +3,11 @@ package handlers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	proto "github.com/Soyaka/microlearn-user/api/proto/gen"
 	"github.com/Soyaka/microlearn-user/internal/database"
 	"github.com/Soyaka/microlearn-user/internal/utils"
-	"github.com/fatih/color"
-	"github.com/go-redis/redis"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -72,30 +69,38 @@ func (U *UmplimentUserMethods) Logout(ctx context.Context, req *proto.Token) (*p
 func (U *UmplimentUserMethods) LoginUser(ctx context.Context, req *proto.LoginRequest) (*proto.Token, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	var user *proto.User
 
+	// Attempt to retrieve user from cache
 	user, err := U.Cache.GetUserFromCache(req.Email)
-	color.Red(user.Email)
-	if err != nil && err != redis.Nil || user == nil {
-		fmt.Print("cache error")
+	if err != nil || user == nil {
+		// If user is not found in cache, retrieve from database
 		user, err = U.Db.GetUserFromDb(ctx, req.Email)
 		if err != nil {
-			return &proto.Token{}, err
+			return nil, err
 		}
+		// Add user to cache
 		U.Cache.AddUserToCache(user, 5*time.Minute)
 	}
 
-	if err := utils.VerifyPassword(user.Password, req.Password); err != nil {
-		return &proto.Token{}, err
+	// Check if user is nil
+	if user == nil {
+		return nil, errors.New("user not found")
 	}
-	token, err := utils.GenerateToken(user.Email, user.Name, user.Id)
 
+	// Verify password
+	if err := utils.VerifyPassword(user.Password, req.Password); err != nil {
+		return nil, err
+	}
+
+	// Generate token
+	token, err := utils.GenerateToken(user.Email, user.Name, user.Id)
 	if err != nil {
-		return &proto.Token{}, err
+		return nil, err
 	}
 
 	return &proto.Token{Token: token}, nil
-
 }
 
 func (*UmplimentUserMethods) RefreshToken(ctx context.Context, req *proto.Token) (*proto.Token, error) {
