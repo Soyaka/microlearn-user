@@ -30,6 +30,11 @@ type UserServiceClient interface {
 	VerifyToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*OK, error)
 	Logout(ctx context.Context, in *Token, opts ...grpc.CallOption) (*OK, error)
 	RefreshToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Token, error)
+	CreateSession(ctx context.Context, in *Session, opts ...grpc.CallOption) (*OK, error)
+	GetSessionByToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Session, error)
+	CreateOtp(ctx context.Context, in *CreateOtpRequest, opts ...grpc.CallOption) (*OK, error)
+	VerifyOtp(ctx context.Context, in *VerifyOtpRequest, opts ...grpc.CallOption) (*OK, error)
+	CleanupExpiredOtps(ctx context.Context, in *OK, opts ...grpc.CallOption) (*OK, error)
 }
 
 type userServiceClient struct {
@@ -112,6 +117,51 @@ func (c *userServiceClient) RefreshToken(ctx context.Context, in *Token, opts ..
 	return out, nil
 }
 
+func (c *userServiceClient) CreateSession(ctx context.Context, in *Session, opts ...grpc.CallOption) (*OK, error) {
+	out := new(OK)
+	err := c.cc.Invoke(ctx, "/UserService/CreateSession", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetSessionByToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Session, error) {
+	out := new(Session)
+	err := c.cc.Invoke(ctx, "/UserService/GetSessionByToken", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateOtp(ctx context.Context, in *CreateOtpRequest, opts ...grpc.CallOption) (*OK, error) {
+	out := new(OK)
+	err := c.cc.Invoke(ctx, "/UserService/CreateOtp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) VerifyOtp(ctx context.Context, in *VerifyOtpRequest, opts ...grpc.CallOption) (*OK, error) {
+	out := new(OK)
+	err := c.cc.Invoke(ctx, "/UserService/VerifyOtp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CleanupExpiredOtps(ctx context.Context, in *OK, opts ...grpc.CallOption) (*OK, error) {
+	out := new(OK)
+	err := c.cc.Invoke(ctx, "/UserService/CleanupExpiredOtps", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -124,6 +174,11 @@ type UserServiceServer interface {
 	VerifyToken(context.Context, *Token) (*OK, error)
 	Logout(context.Context, *Token) (*OK, error)
 	RefreshToken(context.Context, *Token) (*Token, error)
+	CreateSession(context.Context, *Session) (*OK, error)
+	GetSessionByToken(context.Context, *Token) (*Session, error)
+	CreateOtp(context.Context, *CreateOtpRequest) (*OK, error)
+	VerifyOtp(context.Context, *VerifyOtpRequest) (*OK, error)
+	CleanupExpiredOtps(context.Context, *OK) (*OK, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -154,6 +209,21 @@ func (UnimplementedUserServiceServer) Logout(context.Context, *Token) (*OK, erro
 }
 func (UnimplementedUserServiceServer) RefreshToken(context.Context, *Token) (*Token, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshToken not implemented")
+}
+func (UnimplementedUserServiceServer) CreateSession(context.Context, *Session) (*OK, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSession not implemented")
+}
+func (UnimplementedUserServiceServer) GetSessionByToken(context.Context, *Token) (*Session, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSessionByToken not implemented")
+}
+func (UnimplementedUserServiceServer) CreateOtp(context.Context, *CreateOtpRequest) (*OK, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOtp not implemented")
+}
+func (UnimplementedUserServiceServer) VerifyOtp(context.Context, *VerifyOtpRequest) (*OK, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyOtp not implemented")
+}
+func (UnimplementedUserServiceServer) CleanupExpiredOtps(context.Context, *OK) (*OK, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CleanupExpiredOtps not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -312,6 +382,96 @@ func _UserService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_CreateSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Session)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/UserService/CreateSession",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateSession(ctx, req.(*Session))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetSessionByToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Token)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetSessionByToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/UserService/GetSessionByToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetSessionByToken(ctx, req.(*Token))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateOtp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateOtpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateOtp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/UserService/CreateOtp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateOtp(ctx, req.(*CreateOtpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_VerifyOtp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyOtpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).VerifyOtp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/UserService/VerifyOtp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).VerifyOtp(ctx, req.(*VerifyOtpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CleanupExpiredOtps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OK)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CleanupExpiredOtps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/UserService/CleanupExpiredOtps",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CleanupExpiredOtps(ctx, req.(*OK))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -350,6 +510,26 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshToken",
 			Handler:    _UserService_RefreshToken_Handler,
+		},
+		{
+			MethodName: "CreateSession",
+			Handler:    _UserService_CreateSession_Handler,
+		},
+		{
+			MethodName: "GetSessionByToken",
+			Handler:    _UserService_GetSessionByToken_Handler,
+		},
+		{
+			MethodName: "CreateOtp",
+			Handler:    _UserService_CreateOtp_Handler,
+		},
+		{
+			MethodName: "VerifyOtp",
+			Handler:    _UserService_VerifyOtp_Handler,
+		},
+		{
+			MethodName: "CleanupExpiredOtps",
+			Handler:    _UserService_CleanupExpiredOtps_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

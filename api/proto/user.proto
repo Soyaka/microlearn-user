@@ -22,9 +22,10 @@ message RegisterRequest {
 }
 
 message UpdateUserRequest {
-    string name = 1 [json_name = "name"];
-    string email = 2 [json_name = "email"];
-    string password = 3 [json_name = "password"];
+    string id = 1 [json_name = "id"];
+    string name = 2 [json_name = "name"];
+    string email = 3 [json_name = "email"];
+    string password = 4 [json_name = "password"];
 }
 
 message Token {
@@ -37,6 +38,30 @@ message OK {
 
 message ID {
     string id = 1 [json_name = "id"];
+}
+
+message Session {
+    string id = 1 [json_name = "id"];
+    string email = 2 [json_name = "email"];
+    string name = 3 [json_name = "name"];
+    string token = 4 [json_name = "token"];
+    string expires_at = 5 [json_name = "expires_at"];
+}
+
+message Otp {
+    string id = 1 [json_name = "id"];
+    string email = 2 [json_name = "email"];
+    string otp = 3 [json_name = "otp"];
+    string expires_at = 4 [json_name = "expires_at"];
+}
+
+message CreateOtpRequest {
+    string email = 1 [json_name = "email"];
+}
+
+message VerifyOtpRequest {
+    string email = 1 [json_name = "email"];
+    string otp = 2 [json_name = "otp"];
 }
 
 service UserService {
@@ -89,5 +114,39 @@ service UserService {
         option (google.api.http) = {
             post: "/user/refresh"
         };
-    };
+    }
+
+    rpc CreateSession(Session) returns (OK) {
+        option (google.api.http) = {
+            post: "/session/create"
+            body: "*"
+        };
+    }
+
+    rpc GetSessionByToken(Token) returns (Session) {
+        option (google.api.http) = {
+            get: "/session/get"
+        };
+    }
+
+    rpc CreateOtp(CreateOtpRequest) returns (OK) {
+        option (google.api.http) = {
+            post: "/otp/create"
+            body: "*"
+        };
+    }
+
+    rpc VerifyOtp(VerifyOtpRequest) returns (OK) {
+        option (google.api.http) = {
+            post: "/otp/verify"
+            body: "*"
+        };
+    }
+
+    rpc CleanupExpiredOtps(OK) returns (OK) {
+        option (google.api.http) = {
+            post: "/otp/cleanup"
+            body: "*"
+        };
+    }
 }
