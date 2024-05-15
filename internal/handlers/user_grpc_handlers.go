@@ -54,6 +54,7 @@ func (u *ImplementUserMethods) LoginUser(ctx context.Context, req *proto.LoginRe
 		Token:     token,
 		Agent:     req.Agent,
 		ExpiresAt: time.Now().Add(24 * time.Hour).Format(time.RFC3339),
+		UserId:    user.Id,
 	}
 
 	_, err = u.Db.CreateSession(ctx, session)
