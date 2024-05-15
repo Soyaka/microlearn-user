@@ -27,7 +27,7 @@ type UserServiceClient interface {
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*OK, error)
 	GetUser(ctx context.Context, in *ID, opts ...grpc.CallOption) (*User, error)
 	DeleteUser(ctx context.Context, in *ID, opts ...grpc.CallOption) (*OK, error)
-	VerifyToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*OK, error)
+	VerifyToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Claims, error)
 	Logout(ctx context.Context, in *Token, opts ...grpc.CallOption) (*OK, error)
 	RefreshToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Token, error)
 	CreateSession(ctx context.Context, in *Session, opts ...grpc.CallOption) (*OK, error)
@@ -90,8 +90,8 @@ func (c *userServiceClient) DeleteUser(ctx context.Context, in *ID, opts ...grpc
 	return out, nil
 }
 
-func (c *userServiceClient) VerifyToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*OK, error) {
-	out := new(OK)
+func (c *userServiceClient) VerifyToken(ctx context.Context, in *Token, opts ...grpc.CallOption) (*Claims, error) {
+	out := new(Claims)
 	err := c.cc.Invoke(ctx, "/UserService/VerifyToken", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ type UserServiceServer interface {
 	UpdateUser(context.Context, *UpdateUserRequest) (*OK, error)
 	GetUser(context.Context, *ID) (*User, error)
 	DeleteUser(context.Context, *ID) (*OK, error)
-	VerifyToken(context.Context, *Token) (*OK, error)
+	VerifyToken(context.Context, *Token) (*Claims, error)
 	Logout(context.Context, *Token) (*OK, error)
 	RefreshToken(context.Context, *Token) (*Token, error)
 	CreateSession(context.Context, *Session) (*OK, error)
@@ -201,7 +201,7 @@ func (UnimplementedUserServiceServer) GetUser(context.Context, *ID) (*User, erro
 func (UnimplementedUserServiceServer) DeleteUser(context.Context, *ID) (*OK, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
 }
-func (UnimplementedUserServiceServer) VerifyToken(context.Context, *Token) (*OK, error) {
+func (UnimplementedUserServiceServer) VerifyToken(context.Context, *Token) (*Claims, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyToken not implemented")
 }
 func (UnimplementedUserServiceServer) Logout(context.Context, *Token) (*OK, error) {

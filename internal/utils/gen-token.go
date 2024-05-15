@@ -8,20 +8,22 @@ import (
 )
 
 type Claims struct {
-	Email string
-	Name  string
-	ID    string
+	UserID string `json:"UserID"`
+	Email  string `json:"email"`
+	Name   string `json:"name"`
+	Agent  string `json:"agent"`
 	jwt.RegisteredClaims
 }
 
 var KEY = os.Getenv("JWT_KEY")
 
-func GenerateToken(email, name, id string) (string, error) {
+func GenerateToken(email, name, agent, id string) (string, error) {
 
 	claims := Claims{
-		Email: email,
-		Name:  name,
-		ID:    id,
+		Email:  email,
+		Name:   name,
+		UserID: id,
+		Agent:  agent,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "user",
 			ExpiresAt: jwt.NewNumericDate(jwt.NewNumericDate(time.Now()).AddDate(0, 0, 1)),
