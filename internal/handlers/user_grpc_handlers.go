@@ -151,12 +151,7 @@ func (u *ImplementUserMethods) VerifyToken(ctx context.Context, req *proto.Token
 		Email:  claims.Email,
 		Name:   claims.Name,
 		Agent:  claims.Agent,
-		Iat:    claims.RegisteredClaims.IssuedAt.Time.Format(time.RFC3339),
 		Exp:    claims.RegisteredClaims.ExpiresAt.Time.Format(time.RFC3339),
-		Iss:    claims.RegisteredClaims.Issuer,
-		Sub:    claims.RegisteredClaims.Subject,
-		Jti:    claims.RegisteredClaims.ID,
-		Nbf:    claims.RegisteredClaims.NotBefore.Time.Format(time.RFC3339),
 		UserID: claims.UserID,
 	}
 
@@ -204,11 +199,13 @@ func (u *ImplementUserMethods) RefreshToken(ctx context.Context, req *proto.Toke
 	return resp, nil
 }
 func (u *ImplementUserMethods) CreateSession(ctx context.Context, req *proto.Session) (*proto.OK, error) {
-	return &proto.OK{Ok: true}, nil
+
+	return u.Db.CreateSession(ctx, req)
 }
 
 func (u *ImplementUserMethods) GetSessionByToken(ctx context.Context, req *proto.Token) (*proto.Session, error) {
-	return &proto.Session{}, nil
+
+	return u.Db.GetSessionByToken(ctx, req.GetToken())
 }
 
 // OTP Methods
