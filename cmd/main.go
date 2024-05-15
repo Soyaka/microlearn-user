@@ -29,7 +29,7 @@ func main() {
 
 	server := grpc.NewServer()
 
-	UserService := handlers.NewUmplimentUserMethods()
+	UserService := handlers.NewImplementUserMethods()
 	RegisterServerService(server, UserService)
 	log.Printf("server listening at %v", listener.Addr())
 	if err = server.Serve(listener); err != nil {
@@ -38,6 +38,6 @@ func main() {
 
 }
 
-func RegisterServerService(server *grpc.Server, service *handlers.UmplimentUserMethods) {
+func RegisterServerService(server *grpc.Server, service *handlers.ImplementUserMethods) {
 	proto.RegisterUserServiceServer(server, service)
 }

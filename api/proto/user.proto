@@ -13,6 +13,7 @@ message User {
 message LoginRequest {
     string email = 1 [json_name = "email"];
     string password = 2 [json_name = "password"];
+    string agent = 3 [json_name = "agent"];
 }
 
 message RegisterRequest {
@@ -29,7 +30,10 @@ message UpdateUserRequest {
 }
 
 message Token {
-    string token = 1 [json_name = "token"];
+    string id = 1 [json_name = "id"];
+    string email = 2[json_name = "email"];
+    string token = 3 [json_name = "token"];
+
 }
 
 message OK {
@@ -44,8 +48,10 @@ message Session {
     string id = 1 [json_name = "id"];
     string email = 2 [json_name = "email"];
     string name = 3 [json_name = "name"];
-    string token = 4 [json_name = "token"];
-    string expires_at = 5 [json_name = "expires_at"];
+    string agent = 4 [json_name = "agent"];
+    string token = 5 [json_name = "token"];
+    string expires_at = 6 [json_name = "expires_at"];
+    string user_id = 7 [json_name = "user_id"];
 }
 
 message Otp {

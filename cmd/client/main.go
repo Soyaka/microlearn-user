@@ -23,11 +23,9 @@ func main() {
 	cc := proto.NewUserServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	//RegisterUser(ctx, cc)
+	RegisterUser(ctx, cc)
 	LoginUser(ctx, cc)
-	//VerifyToken(ctx, cc)
-	//RefreshToken(ctx, cc)
+
 
 }
 
@@ -48,6 +46,7 @@ func RegisterUser(ctx context.Context, cc proto.UserServiceClient) {
 }
 
 func LoginUser(ctx context.Context, cc proto.UserServiceClient) {
+
 
 	res, err := cc.LoginUser(ctx, &proto.LoginRequest{
 		Email:    "hamidi@exassmple.com",

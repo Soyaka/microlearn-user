@@ -17,8 +17,8 @@ type RedisClient struct {
 
 func NewCache() *RedisClient {
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6377",
-		})
+		Addr: "localhost:6377",
+	})
 	pong, err := client.Ping().Result()
 	if err != nil {
 		fmt.Println("Failed to ping Redis server:", err)
@@ -59,4 +59,15 @@ func (c *RedisClient) GetUserFromCache(email string) (*proto.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (c *RedisClient) DeleteUserFromCache(email string) error {
+
+	err := c.Client.Del(email).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

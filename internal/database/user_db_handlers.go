@@ -14,7 +14,7 @@ func (s *Service) AddUserToDb(ctx context.Context, req *proto.User) (*proto.OK, 
 	if req.Email == "" || req.Password == "" {
 		return &proto.OK{Ok: false}, errors.New("email and password are required")
 	}
-	if user , err := s.getUserByEmail(ctx, req.Email); err == nil && user != nil {
+	if user, err := s.getUserByEmail(ctx, req.Email); err == nil && user != nil {
 		return &proto.OK{Ok: false}, errors.New("user already exists")
 	}
 
@@ -105,6 +105,17 @@ func (s *Service) GetSessionByToken(ctx context.Context, token string) (*proto.S
 	return &session, nil
 }
 
+func (s *Service) DeleteSession(ctx context.Context, session *proto.Session) (*proto.OK, error) {
+	ctox, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	res := s.Db.WithContext(ctox).Delete(&session)
+	if res.Error != nil {
+		return &proto.OK{Ok: false}, res.Error
+	}
+	color.Green("Session deleted")
+	return &proto.OK{Ok: true}, nil
+}
+
 func (s *Service) CreateOtp(ctx context.Context, otp *proto.Otp) (*proto.OK, error) {
 	ctox, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -114,6 +125,43 @@ func (s *Service) CreateOtp(ctx context.Context, otp *proto.Otp) (*proto.OK, err
 	}
 	color.Yellow("OTP created")
 	return &proto.OK{Ok: true}, nil
+}
+
+func (s *Service) GetOtpById(ctx context.Context, id string) (*proto.Otp, error) {
+	ctox, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var otp proto.Otp
+
+	res := s.Db.WithContext(ctox).First(&otp, "id = ?", id)
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return &otp, nil
+}
+
+func (s *Service) VerifyOtp(ctx context.Context, req *proto.VerifyOtpRequest) (*proto.OK, error) {
+	ctox, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var otp *proto.Otp
+
+	otp, err := s.GetOtpByEmail(ctox, req.Email)
+
+	if err != nil || otp == nil {
+		return &proto.OK{Ok: false}, err
+	}
+
+	if otp.Otp != req.Otp {
+		return &proto.OK{Ok: false}, errors.New("invalid OTP")
+	}
+	if otp.ExpiresAt < time.Now().Format(time.RFC3339) {
+		return &proto.OK{Ok: false}, errors.New("OTP expired")
+	}
+
+	return &proto.OK{Ok: true}, nil
+
 }
 
 func (s *Service) GetOtpByEmail(ctx context.Context, email string) (*proto.Otp, error) {

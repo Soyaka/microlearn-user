@@ -12,32 +12,34 @@ import (
 	"gorm.io/gorm"
 )
 
-type UmplimentUserMethods struct {
+type ImplementUserMethods struct {
 	Db    *database.Service
 	Cache *database.RedisClient
 	proto.UnimplementedUserServiceServer
 }
 
-func NewUmplimentUserMethods() *UmplimentUserMethods {
-	return &UmplimentUserMethods{
+func NewImplementUserMethods() *ImplementUserMethods {
+	return &ImplementUserMethods{
 		Db:    database.NewDatabase(),
 		Cache: database.NewCache(),
 	}
 }
 
-func (U *UmplimentUserMethods) GetUser(ctx context.Context, req *proto.ID) (*proto.User, error) {
+func (u *ImplementUserMethods) GetUser(ctx context.Context, req *proto.ID) (*proto.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	res, err := U.Db.GetUserByID(ctx, req)
+	res, err := u.Db.GetUserByID(ctx, req)
 
 	if err != nil {
 		return &proto.User{}, err
 	}
 	return res, nil
 }
-func (U *UmplimentUserMethods) RegisterUser(ctx context.Context, req *proto.RegisterRequest) (*proto.OK, error) {
+
+func (u *ImplementUserMethods) RegisterUser(ctx context.Context, req *proto.RegisterRequest) (*proto.OK, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
 	user := &proto.User{
 		Id:    uuid.New().String(),
 		Name:  req.GetName(),
@@ -50,60 +52,81 @@ func (U *UmplimentUserMethods) RegisterUser(ctx context.Context, req *proto.Regi
 	}
 	user.Password = pwd
 
-	res, err := U.Db.AddUserToDb(ctx, user)
+	res, err := u.Db.AddUserToDb(ctx, user)
 	if err == gorm.ErrDuplicatedKey {
 		return &proto.OK{Ok: false}, errors.New("user already exists")
 	}
 
-	_ = U.Cache.AddUserToCache(user, 5*time.Minute)
+	_ = u.Cache.AddUserToCache(user, 5*time.Minute)
 
 	return res, nil
-
 }
-func (U *UmplimentUserMethods) Logout(ctx context.Context, req *proto.Token) (*proto.OK, error) {
-	//ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	//defer cancel()
 
-	return &proto.OK{Ok: true}, nil
-}
-func (U *UmplimentUserMethods) LoginUser(ctx context.Context, req *proto.LoginRequest) (*proto.Token, error) {
+func (u *ImplementUserMethods) LoginUser(ctx context.Context, req *proto.LoginRequest) (*proto.Token, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	var user *proto.User
-
-	// Attempt to retrieve user from cache
-	user, err := U.Cache.GetUserFromCache(req.Email)
+	user, err := u.Cache.GetUserFromCache(req.Email)
 	if err != nil || user == nil {
-		// If user is not found in cache, retrieve from database
-		user, err = U.Db.GetUserFromDb(ctx, req.Email)
+		user, err = u.Db.GetUserFromDb(ctx, req.Email)
 		if err != nil {
 			return nil, err
 		}
-		// Add user to cache
-		U.Cache.AddUserToCache(user, 5*time.Minute)
+		u.Cache.AddUserToCache(user, 5*time.Minute)
 	}
 
-	// Check if user is nil
 	if user == nil {
 		return nil, errors.New("user not found")
 	}
 
-	// Verify password
 	if err := utils.VerifyPassword(user.Password, req.Password); err != nil {
 		return nil, err
 	}
 
-	// Generate token
 	token, err := utils.GenerateToken(user.Email, user.Name, user.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &proto.Token{Token: token}, nil
+	session := &proto.Session{
+		Id:        uuid.New().String(),
+		Email:     user.Email,
+		Name:      user.Name,
+		Token:     token,
+		Agent:     req.Agent,
+		ExpiresAt: time.Now().Add(24 * time.Hour).Format(time.RFC3339),
+	}
+
+	_, err = u.Db.CreateSession(ctx, session)
+	if err != nil {
+		return nil, err
+	}
+	resp := &proto.Token{
+		Id:    user.Id,
+		Token: token,
+		Email: user.Email,
+	}
+	return resp, nil
 }
 
-func (*UmplimentUserMethods) RefreshToken(ctx context.Context, req *proto.Token) (*proto.Token, error) {
+func (u *ImplementUserMethods) Logout(ctx context.Context, req *proto.Token) (*proto.OK, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	session, err := u.Db.GetSessionByToken(ctx, req.GetToken())
+	if err != nil {
+		return &proto.OK{Ok: false}, err
+	}
+
+	ok, err := u.Db.DeleteSession(ctx, session)
+	if err != nil {
+		return &proto.OK{Ok: ok.GetOk()}, err
+	}
+
+	return &proto.OK{Ok: true}, nil
+}
+
+func (u *ImplementUserMethods) RefreshToken(ctx context.Context, req *proto.Token) (*proto.Token, error) {
 	if req.Token == "" {
 		return &proto.Token{}, nil
 	}
@@ -117,11 +140,16 @@ func (*UmplimentUserMethods) RefreshToken(ctx context.Context, req *proto.Token)
 	if err != nil {
 		return &proto.Token{}, err
 	}
-	return &proto.Token{Token: token}, nil
+	resp := &proto.Token{
+		Id:    req.Id,
+		Token: token,
+		Email: req.Email,
+	}
+
+	return resp, nil
 }
 
-func (*UmplimentUserMethods) VerifyToken(ctx context.Context, req *proto.Token) (*proto.OK, error) {
-
+func (u *ImplementUserMethods) VerifyToken(ctx context.Context, req *proto.Token) (*proto.OK, error) {
 	if req.Token == "" {
 		return &proto.OK{}, nil
 	}
@@ -133,16 +161,66 @@ func (*UmplimentUserMethods) VerifyToken(ctx context.Context, req *proto.Token) 
 
 	return &proto.OK{Ok: true}, nil
 }
-func (U *UmplimentUserMethods) UpdateUser(ctx context.Context, req *proto.UpdateUserRequest) (*proto.OK, error) {
-	ctox, cancel := context.WithTimeout(ctx, 5*time.Second)
+
+func (u *ImplementUserMethods) UpdateUser(ctx context.Context, req *proto.UpdateUserRequest) (*proto.OK, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	return U.Db.UpdateUserInDb(ctox, req)
+	res, err := u.Db.UpdateUserInDb(ctx, req)
+
+	if err != nil {
+		return &proto.OK{Ok: false}, err
+
+	}
+
+	_ = u.Cache.DeleteUserFromCache(req.Id)
+
+	return res, nil
 }
 
-func (U *UmplimentUserMethods) DeleteUser(ctx context.Context, req *proto.ID) (*proto.OK, error) {
-	ctox, cancel := context.WithTimeout(ctx, 5*time.Second)
+func (u *ImplementUserMethods) DeleteUser(ctx context.Context, req *proto.ID) (*proto.OK, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	return U.Db.DeleteUserFromDb(ctox, req)
+	res, err := u.Db.DeleteUserFromDb(ctx, req)
+
+	if err != nil {
+		return &proto.OK{Ok: false}, err
+	}
+
+	//destroy cache key and session
+
+	_ = u.Cache.DeleteUserFromCache(req.Id)
+
+	return res, nil
+}
+
+// OTP Methods
+
+func (u *ImplementUserMethods) CreateOtp(ctx context.Context, req *proto.CreateOtpRequest) (*proto.OK, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	otp := &proto.Otp{
+		Id:        uuid.New().String(),
+		Email:     req.GetEmail(),
+		Otp:       utils.GenerateOtp(),
+		ExpiresAt: time.Now().Add(10 * time.Minute).Format(time.RFC3339),
+	}
+
+	res, err := u.Db.CreateOtp(ctx, otp)
+	if err != nil {
+		return &proto.OK{Ok: false}, err
+	}
+
+	// TODO: send otp via email
+
+	return res, nil
+}
+
+func (u *ImplementUserMethods) VerifyOtp(ctx context.Context, req *proto.VerifyOtpRequest) (*proto.OK, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	return u.Db.VerifyOtp(ctx, req)
 }
